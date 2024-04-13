@@ -35,6 +35,7 @@ function App() {
 
   return (
     <div>
+      <h1 style={{ fontWeight: 'bold' }}>Online Bookstore</h1>
       <GenreSelector bookData={bookData} handleGenreChange={handleGenreChange} />
       <BookList bookData={bookData[selectedGenre]} addToBasket={addToBasket} />
       <Basket basket={basket} />
