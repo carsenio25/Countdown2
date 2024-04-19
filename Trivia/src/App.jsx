@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// import React, { useState, useEffect } from 'react';
+// import './App.css'; // Make sure to import the CSS
+
+
+import React, { useState, useEffect } from 'react';
+
+const fetchQuestions = async () => {
+  const url = 'https://opentdb.com/api.php?amount=2';
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.results;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchQuestions = async () => {
+    const url = 'https://opentdb.com/api.php?amount=10';
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      const formattedData = data.results.map((q) => ({
+        ...q,
+        allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5)
+      }));
+      setQuestions(formattedData);
+      setLoading(false); 
+    } catch (error) {
+      console.error('Failed to fetch questions', error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
+  const handleAnswer = (answer) => {
+    setSelectedAnswer(answer);
+    setIsCorrect(answer === questions[currentQuestion].correct_answer);
+  };
+
+  if (loading) {
+    return <p>Loading questions...</p>; 
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      {questions.length > 0 && (
+        <div>
+          <p>{questions[currentQuestion].question}</p>
+          {questions[currentQuestion].allAnswers.map((answer, index) => (
+            <button key={index} onClick={() => handleAnswer(answer)}>
+              {answer}
+            </button>
+          ))}
+        </div>
+      )}
+      {selectedAnswer && (
+        <p>{isCorrect ? 'Correct!' : 'Wrong!'}</p>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
