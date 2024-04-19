@@ -1,15 +1,26 @@
-// import React, { useState, useEffect } from 'react';
-// import './App.css'; // Make sure to import the CSS
-
-
 import React, { useState, useEffect } from 'react';
+import Card from '@mui/material/Card';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 
 const fetchQuestions = async () => {
-  const url = 'https://opentdb.com/api.php?amount=2';
-  const response = await fetch(url);
-  const data = await response.json();
-  return data.results;
+  const url = 'https://the-trivia-api.com/api/questions?limit=10';
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    const formattedData = data.map(question => ({
+      ...question,
+      allAnswers: [question.correctAnswer, ...question.incorrectAnswers].sort(() => Math.random() - 0.5)
+    }));
+    setQuestions(formattedData);
+    setLoading(false);
+  } 
+  catch (error) {
+    console.error('Failed to fetch questions', error);
+    setLoading(false);
+  }
 };
+
 
 function App() {
   const [questions, setQuestions] = useState([]);
@@ -18,50 +29,56 @@ function App() {
   const [isCorrect, setIsCorrect] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchQuestions = async () => {
-    const url = 'https://opentdb.com/api.php?amount=10';
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      const formattedData = data.results.map((q) => ({
-        ...q,
-        allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5)
-      }));
-      setQuestions(formattedData);
-      setLoading(false); 
-    } catch (error) {
-      console.error('Failed to fetch questions', error);
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchQuestions = async () => {
+      const url = 'https://the-trivia-api.com/api/questions?limit=10';
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const formattedData = data.map(question => ({
+          ...question,
+          allAnswers: [question.correctAnswer, ...question.incorrectAnswers].sort(() => Math.random() - 0.5)
+        }));
+        setQuestions(formattedData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch questions', error);
+        setLoading(false);
+      }
+    };
+
     fetchQuestions();
   }, []);
 
   const handleAnswer = (answer) => {
     setSelectedAnswer(answer);
-    setIsCorrect(answer === questions[currentQuestion].correct_answer);
+    setIsCorrect(answer === questions[currentQuestion].correctAnswer);
   };
 
-  if (loading) {
-    return <p>Loading questions...</p>; 
-  }
-
   return (
-    <div>
+    <div style={{ padding: 20 }}>
       {questions.length > 0 && (
-        <div>
-          <p>{questions[currentQuestion].question}</p>
+        <Card variant="outlined" style={{ margin: '20px', padding: '20px' }}>
+          <Typography variant="h5" component="h2">
+            {questions[currentQuestion].question}
+          </Typography>
           {questions[currentQuestion].allAnswers.map((answer, index) => (
-            <button key={index} onClick={() => handleAnswer(answer)}>
+            <Button
+              variant="contained"
+              color="primary"
+              key={index}
+              onClick={() => handleAnswer(answer)}
+              style={{ margin: '10px' }}
+            >
               {answer}
-            </button>
+            </Button>
           ))}
-        </div>
+        </Card>
       )}
       {selectedAnswer && (
-        <p>{isCorrect ? 'Correct!' : 'Wrong!'}</p>
+        <Typography variant="body1" style={{ marginTop: 20 }}>
+          {isCorrect ? 'Correct!' : 'Wrong!'}
+        </Typography>
       )}
     </div>
   );
